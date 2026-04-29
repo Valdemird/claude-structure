@@ -1,91 +1,108 @@
 # Skill: Spec Orchestrator
 
-Orquesta el workflow completo de spec-driven development delegando a subagents especializados.
+Orchestrates the full spec-driven development workflow by delegating to specialized subagents.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere desarrollar una feature nueva de principio a fin, o menciona "spec workflow", "nueva feature", "desarrollar", "implementar feature".
+When the user wants to develop a new feature end-to-end, or says "spec workflow", "new feature", "build this feature".
 
-## Workflow completo
+## Full workflow
 
-Este skill coordina 5 fases secuenciales. Cada fase tiene un quality gate que debe pasar antes de avanzar.
+This skill coordinates 5 sequential phases. Most gates are structural (deterministic hooks). The only human-approval gate is after Phase 4 (plan approval) — and even that is skipped when `AUTO_MODE=1`.
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  1. CREATE   │───▶│  2. AUDIT    │───▶│  3. REVIEW   │───▶│  4. PLAN     │───▶│  5. IMPLEMENT│
-│  Spec Writer │    │  Architect   │    │  Orchestrator│    │  Architect   │    │  Implementer │
-│              │    │              │    │              │    │  +Ultrathink │    │              │
-└──────┬───────┘    └──────┬───────┘    └──────┬───────┘    └──────┬───────┘    └──────┬───────┘
-       │                   │                   │                   │                   │
-   ◆ Gate 1            ◆ Gate 2            ◆ Gate 3            ◆ Gate 4            ◆ Gate 5
-   Spec existe         Análisis            Semáforo             Plan aprobado       Tests pasan
-   + estructura        técnico             🟢 o 🟡             por developer       + type check
-   válida              completo            + dev aprueba                            + lint clean
+┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────────┐  ┌──────────────┐
+│ 1. CREATE  │─▶│ 2. AUDIT   │─▶│ 3. REVIEW  │─▶│ 4. PLAN      │─▶│ 5. IMPLEMENT │
+│ Spec Writer│  │ Architect  │  │ Orchestrator│ │ Architect     │ │ Implementer  │
+│            │  │            │  │            │  │ +Ultrathink   │ │              │
+└─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └──────┬───────┘  └──────┬───────┘
+      │               │               │                │                  │
+   Gate 1         Gate 2          Gate 3           Gate 4              Gate 5
+   structural     structural      traffic light    plan structural     hook: tests
+   hook auto      hook auto       🔴 only blocks   hook auto +         + typecheck
+                                                  HUMAN APPROVAL       + lint clean
+                                                  (skipped if           (auto-runs
+                                                  AUTO_MODE=1)          every phase
+                                                                        if AUTO_MODE)
 ```
 
-## Cómo usar
+## How to use
 
-### Flujo completo (recomendado)
-```
-"Quiero desarrollar la feature de [feature-name]"
-```
-El orchestrator guiará cada fase, delegando al subagent correcto.
+### Full flow (recommended)
 
-### Fase individual
 ```
-"Crea el spec para [feature-name]"        → Delega a Spec Writer
-"Audita el spec de [feature-name]"        → Delega a Architect
-"Revisa el spec de [feature-name]"        → Ejecuta Review
-"Genera el plan para [feature-name]"      → Delega a Architect (con ultrathink)
-"Implementa la fase 2 de [feature-name]"  → Delega a Implementer
+"I want to build the [feature-name] feature"
 ```
 
-## Quality Gates entre fases
+The orchestrator runs every phase, delegating to the right subagent. With `AUTO_MODE=1`, the entire pipeline runs end-to-end without stopping.
 
-### Gate 1: Spec Created → Ready for Audit
-- [ ] Archivo existe en `.claude/specs/<feature>.md`
-- [ ] Tiene todas las secciones requeridas (Contexto, Qué quiero, Comportamiento, Criterios)
-- [ ] Tiene al menos 3 criterios de aceptación
-- [ ] Preguntas abiertas están documentadas
+### Individual phases
 
-### Gate 2: Audit Complete → Ready for Review
-- [ ] Sección "Análisis Técnico" existe en el spec
-- [ ] Archivos a modificar/crear están listados con rutas exactas
-- [ ] Patrones del proyecto están documentados
-- [ ] Riesgos detectados y documentados
+```
+"Create the spec for [feature-name]"        → delegates to Spec Writer
+"Audit the spec for [feature-name]"         → delegates to Architect
+"Review the spec for [feature-name]"        → runs review (auto-proceeds unless 🔴)
+"Generate the plan for [feature-name]"      → delegates to Architect (with Ultrathink)
+"Implement phase 2 of [feature-name]"       → delegates to Implementer
+```
 
-### Gate 3: Review Passed → Ready for Plan
-- [ ] Developer ha revisado el spec
-- [ ] Semáforo es 🟢 o 🟡 (no 🔴)
-- [ ] Si 🟡: supuestos están documentados y developer acepta
-- [ ] Preguntas bloqueantes resueltas
+## Auto-mode contract
 
-### Gate 4: Plan Approved → Ready for Implementation
-- [ ] Plan tiene fases claras con TDD (Red/Green/Refactor)
-- [ ] Cada fase tiene archivos específicos listados
-- [ ] Decisiones de arquitectura documentadas con alternativas evaluadas
-- [ ] Developer ha aprobado el plan explícitamente
-- [ ] Rollback plan existe para cada fase
+The workflow has only **two real human-decision points**:
 
-### Gate 5: Phase Complete → Ready for Next Phase
-- [ ] Todos los tests de la fase pasan
-- [ ] Type check limpio (`npx tsc --noEmit`)
-- [ ] Lint limpio (`npx eslint --fix`)
-- [ ] Sin desviaciones no reportadas del plan
-- [ ] Developer da luz verde
+1. **Plan approval (Gate 4)** — the design contract. Skipped in `AUTO_MODE=1`.
+2. **STOP protocol** — the Implementer auto-stops on genuine ambiguity (existing code contradicts plan, missing dependency, broken existing test, ambiguous plan, etc.).
 
-## Protocolo de delegación
+Everything else proceeds automatically. Structural hooks enforce shape; the traffic light only blocks on 🔴.
 
-Cuando delegas a un subagent, siempre:
+## Quality Gates between phases
 
-1. **Carga el agente correcto** de `.claude/agents/`
-2. **Pasa el contexto necesario**: nombre de feature, fase actual, estado de gates
-3. **Valida el output** contra los quality gates antes de avanzar
-4. **Reporta al developer** el estado después de cada fase
+### Gate 1: Spec created → ready for audit
+- [ ] File exists at `.claude/specs/<feature>.md`.
+- [ ] All required sections present (Context, What I want, Behavior, Acceptance criteria).
+- [ ] At least 3 acceptance criteria.
+- [ ] Open questions documented.
+- Enforced by `validate-spec-structure.sh` (PostToolUse hook). **Not human-gated.**
 
-## Manejo de errores
+### Gate 2: Audit complete → ready for review
+- [ ] "Technical Analysis" section exists.
+- [ ] Files to modify/create listed with exact paths.
+- [ ] Project patterns documented.
+- [ ] Risks detected and documented.
+- Enforced by `validate-audit.sh`. **Not human-gated.**
 
-- Si un gate falla → reporta qué falta y pide acción al developer
-- Si un subagent encuentra un blocker → escala inmediatamente
-- Si el developer quiere saltar una fase → advierte los riesgos pero permite (documentando la decisión)
-- Si hay conflicto entre el spec y el código → prioriza el código existente y actualiza el spec
+### Gate 3: Review passed → ready for plan
+- [ ] No 🔴 items unresolved.
+- [ ] 🟡 assumptions documented.
+- Auto-proceeds unless 🔴 is present. **Only 🔴 blocks.**
+
+### Gate 4: Plan approved → ready for implementation
+- [ ] Plan has clear phases with TDD (Red/Green/Refactor).
+- [ ] Each phase has files with exact paths.
+- [ ] Architecture decisions documented with alternatives.
+- [ ] Rollback plan per phase.
+- [ ] **Developer approval** (skipped in `AUTO_MODE=1`).
+
+### Gate 5: Phase complete → ready for next phase
+- [ ] All phase tests pass.
+- [ ] Type check clean.
+- [ ] Lint clean.
+- [ ] No unreported deviations from the plan.
+- Enforced by `validate-implementation.sh`. **Not human-gated.**
+- In `AUTO_MODE=1`, the Implementer auto-proceeds to Phase N+1.
+
+## Delegation protocol
+
+When delegating to a subagent:
+
+1. **Load the right agent** from `.claude/agents/`.
+2. **Pass the necessary context**: feature name, current phase, gate state.
+3. **Validate the output** against the structural hook before advancing.
+4. **Report** to the developer after each phase (or only at the end in `AUTO_MODE=1`).
+
+## Error handling
+
+- If a structural hook fails → the agent fixes the issue and re-runs.
+- If a subagent hits a STOP-protocol blocker → escalate to the developer immediately.
+- If the developer wants to skip a phase → warn about the risks but allow it (document the decision in the spec).
+- If the spec conflicts with existing code → prefer the existing code and update the spec.

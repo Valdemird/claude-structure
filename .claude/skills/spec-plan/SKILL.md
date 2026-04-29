@@ -1,117 +1,130 @@
-# Skill: Spec Plan (con Ultrathink)
+# Skill: Spec Plan (with Ultrathink)
 
-Genera un plan de implementación por fases con TDD, delegando al subagent Architect con extended thinking activado.
+Generates a phased implementation plan with TDD, delegating to the Architect subagent with extended thinking enabled.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere planificar la implementación de un spec, menciona "plan", "planificar", "generar plan", "cómo implementar".
+When the user wants to plan the implementation of a spec — "plan", "generate plan", "how to implement".
 
-## Instrucciones
+## Instructions
 
-### 1. Activar Extended Thinking (Ultrathink)
+### 1. Engage extended thinking (Ultrathink)
 
-**IMPORTANTE**: Este skill requiere pensamiento profundo. Antes de generar el plan:
+**IMPORTANT**: This skill requires deep thinking. Before producing the plan, think **very deeply** about:
 
-Piensa **muy extensamente** sobre:
+#### Trade-offs analysis
 
-#### Análisis de trade-offs
-- Para cada decisión de diseño, evalúa mínimo 2 alternativas
-- Documenta pros/contras de cada una
-- Justifica la elección con evidencia del código existente
+- For every meaningful design decision, evaluate at least 2 alternatives.
+- Document pros/cons of each.
+- Justify the choice with evidence from the existing code.
 
 #### Devil's Advocate
-- Argumenta **contra** tu propia propuesta
-- ¿Qué asumes que podría ser falso?
-- ¿Qué cambió desde que se escribió el spec que invalida algo?
-- ¿Qué haría un reviewer Senior que encontrara este plan?
 
-#### Análisis de riesgo
-- ¿Qué puede fallar en cada fase?
-- ¿Cuál es el blast radius si algo sale mal?
-- ¿Es reversible? ¿Cuánto cuesta el rollback?
+- Argue **against** your own proposal.
+- What are you assuming that could be false?
+- What changed since the spec was written that might invalidate it?
+- What would a Senior reviewer say if they read this plan cold?
 
-#### Deuda técnica
-- ¿Estamos creando deuda técnica?
-- ¿Es deuda aceptable (pragmática) o problemática (estructural)?
-- ¿Hay deuda existente que esta feature empeora?
+#### Risk analysis
 
-### 2. Leer el spec auditado
+- What could fail in each phase?
+- What's the blast radius if something goes wrong?
+- Is it reversible? How costly is the rollback?
 
-Lee `.claude/specs/<feature-name>.md` completo, incluyendo el Análisis Técnico.
+#### Tech debt
 
-### 3. Delegar al Architect
+- Are we creating tech debt?
+- Is it acceptable (pragmatic) or problematic (structural)?
+- Is there existing debt this feature makes worse?
 
-Usa el subagent `.claude/agents/architect.md` para generar el plan.
+### 2. Read the audited spec
 
-El Architect genera un plan con este formato:
+Read `.claude/specs/<feature-name>.md` in full, including the Technical Analysis section.
+
+### 3. Delegate to the Architect
+
+Use the subagent at `.claude/agents/architect.md` to generate the plan.
+
+Plan format:
 
 ```markdown
-## Plan: [Nombre Feature]
+## Plan: [Feature Name]
 
-### Análisis de trade-offs (Ultrathink)
-| Decisión | Opción A | Opción B | Elegida | Razón |
-|----------|----------|----------|---------|-------|
+### Trade-off analysis (Ultrathink)
+| Decision | Option A | Option B | Chosen | Reason |
+| -------- | -------- | -------- | ------ | ------ |
 
 ### Devil's Advocate
-- [argumento contra la propuesta y por qué igual procedemos]
+- [counter-argument and why we proceed anyway]
 
-### Fase 1 — [Nombre descriptivo]
-**Objetivo:** qué queda funcionando al terminar
-**Archivos:**
-- crear: [ruta exacta]
-- modificar: [ruta exacta]
+### Phase 1 — [Descriptive name]
+**Goal:** what is working when this phase ends.
+**Files:**
+- create: [exact path]
+- modify: [exact path]
 
 **TDD — Red:**
-- [ ] Test: [descripción + archivo] → espera fallo ❌
+- [ ] Test: [description + file] → expects failure ❌
 
 **TDD — Green:**
-- [ ] [código a escribir] → tests pasan ✅
+- [ ] [code to write] → tests pass ✅
 
 **TDD — Refactor:**
-- [ ] [mejoras] → tests siguen ✅
+- [ ] [improvements] → tests still pass ✅
 
-**Verificación:** [cómo validar]
-**Rollback:** [cómo deshacer]
+**Verification:** [how to validate]
+**Rollback:** [how to undo]
 
-### Fase N — ...
+### Phase N — ...
 
-### Decisiones de implementación
-- [decisión + justificación]
+### Implementation decisions
+- [decision + justification]
 
-### Fuera del scope
-- [lo que NO se implementa]
+### Out of scope
+- [what is NOT being built]
 
-### Riesgos
-| Riesgo | Probabilidad | Impacto | Mitigación |
-|--------|-------------|---------|------------|
+### Risks
+| Risk | Probability | Impact | Mitigation |
+| ---- | ----------- | ------ | ---------- |
 ```
 
-### 4. Quality Gate — Validar plan
+### 4. Quality Gate — automatic structural validation
+
+The hook `validate-plan.sh` enforces:
+
+- [ ] Plan has at least 2 phases.
+- [ ] Each phase has TDD (Red/Green/Refactor).
+- [ ] Each phase has specific files with exact paths.
+- [ ] Trade-offs table present with alternatives evaluated.
+- [ ] Devil's Advocate section present and non-empty.
+- [ ] Risks documented with mitigation.
+- [ ] Rollback plan per phase.
+- [ ] "Out of scope" section present.
+
+If the hook fails, the Architect fixes it before continuing.
+
+### 5. Output and the contract gate
+
+This is the **single human-approval gate** in the workflow. The plan is the contract — once approved, the implementer runs autonomously through every phase.
 
 ```
-✅ Checklist Gate 4:
-- [ ] Plan tiene al menos 2 fases
-- [ ] Cada fase tiene TDD (Red/Green/Refactor)
-- [ ] Cada fase tiene archivos específicos con rutas exactas
-- [ ] Tabla de trade-offs presente con alternativas evaluadas
-- [ ] Sección Devil's Advocate presente y no vacía
-- [ ] Riesgos documentados con mitigación
-- [ ] Rollback plan en cada fase
-- [ ] Sección "Fuera del scope" presente
+If AUTO_MODE=1 (env var):
+  Print the full plan.
+  Print: "AUTO_MODE active — proceeding to Phase 1 implementation immediately. Interrupt to abort."
+  Continue to spec-implement Phase 1.
+
+If AUTO_MODE is unset or 0 (default):
+  Print the full plan.
+  Ask: "Approve this plan or adjust before Phase 1?"
+  Wait for explicit approval before invoking spec-implement.
 ```
 
-### 5. Output al developer
+This is the only approval gate that remains by design. Every other gate is structural (deterministic hooks) or informational (traffic light). Once the plan is approved (or AUTO_MODE skips it), the implementer auto-runs every phase, only stopping for the STOP-protocol triggers.
 
-Muestra el plan completo y pregunta:
+## Rules
 
-> "¿Apruebas este plan o quieres ajustar algo antes de empezar la Fase 1?"
-
-**No escribas código. Espera aprobación explícita del developer.**
-
-## Reglas
-
-- Máximo 4-5 fases para features medianas
-- Cada fase verificable independientemente
-- TDD estricto: tests ANTES del código
-- Si hay ambigüedad, documenta el supuesto
-- El plan debe ser ejecutable sin preguntas adicionales
+- Maximum 4–5 phases for medium features.
+- Each phase verifiable independently.
+- Strict TDD: tests BEFORE code.
+- If something is ambiguous, document the assumption.
+- The plan must be executable without further questions.

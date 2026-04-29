@@ -1,114 +1,119 @@
 # Skill: Spec Implement
 
-Implementa una fase específica del plan, delegando al subagent Implementer con TDD estricto.
+Implements a specific phase of the plan, delegating to the Implementer subagent with strict TDD.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere implementar una fase, menciona "implementar fase", "ejecutar fase", "implement", "fase 1", "fase 2", etc.
+When the user wants to implement a phase — "implement phase", "run phase", "implement", "phase 1", "phase 2".
 
-## Instrucciones
+In `AUTO_MODE=1`, this skill is also auto-invoked by `spec-plan` once the plan is generated, and runs every phase back-to-back without stopping.
 
-### 1. Identificar qué implementar
+## Instructions
 
-Extrae del input del developer:
-- **Feature name**: nombre del spec
-- **Fase número**: qué fase implementar
+### 1. Identify what to implement
 
-### 2. Verificar pre-requisitos
+From the developer input or the orchestrator handoff:
+- **Feature name**: the spec name.
+- **Phase number**: which phase to implement, or `all` to run every remaining phase sequentially.
 
-Antes de implementar, verifica:
-- El spec existe en `.claude/specs/<feature>.md`
-- El plan de implementación está en el spec
-- Si es Fase > 1: la fase anterior fue completada
+### 2. Verify pre-requisites
 
-### 3. Delegar al Implementer
+Before implementing:
+- The spec exists at `.claude/specs/<feature>.md`.
+- The implementation plan is in the spec.
+- For phase N > 1: the previous phase was completed (its tests pass).
 
-Usa el subagent `.claude/agents/implementer.md` para ejecutar la fase.
+### 3. Delegate to the Implementer
 
-El Implementer sigue estrictamente:
+Use the subagent at `.claude/agents/implementer.md` to execute the phase.
+
+The Implementer follows strictly:
 
 ```
-1. RED — Escribir tests que fallan
-   → Crear archivos de test según el plan
-   → Ejecutar: npx vitest run [archivo] → debe FALLAR
-   → Si pasa sin código → test mal escrito, rehacer
+1. RED — Write failing tests
+   → Create the test files described in the plan.
+   → Run: ${TEST_CMD} [file] → must FAIL.
+   → If it passes without code → test is wrong, rewrite.
 
-2. GREEN — Implementar el mínimo
-   → Solo código para que tests pasen
-   → Ejecutar: npx vitest run [archivo] → debe PASAR
-   → Si falla → iterar (sin cambiar tests)
+2. GREEN — Minimal implementation
+   → Write only the code needed to pass.
+   → Run: ${TEST_CMD} [file] → must PASS.
+   → If it fails → iterate (do NOT change tests).
 
-3. REFACTOR — Limpiar sin romper
-   → Mejorar nombres, reducir duplicación
-   → Ejecutar: npx vitest run [archivo] → debe SEGUIR pasando
+3. REFACTOR — Clean up without breaking
+   → Improve names, reduce duplication.
+   → Run: ${TEST_CMD} [file] → must KEEP passing.
 ```
 
-### 4. Verificaciones post-fase (Quality Gate 5)
+### 4. Post-phase verification (Quality Gate 5)
 
-El Implementer debe ejecutar en orden:
+The Implementer runs in order:
 
 ```bash
-# 1. Tests de la fase
-npx vitest run --reporter=verbose [archivos-de-la-fase]
-
-# 2. Type check
-npx tsc --noEmit
-
-# 3. Lint + fix
-npx eslint [archivos-modificados] --fix
-
-# 4. Format
-npx prettier --write [archivos-modificados]
-
-# 5. Tests completos (si afecta múltiples módulos)
-npm run test
+${TEST_CMD} [phase files]
+${TYPECHECK_CMD}
+${LINT_CMD} [modified files]
+${FORMAT_CMD} [modified files]
+${TEST_ALL_CMD}   # only when the phase touches multiple modules
 ```
 
-```
-✅ Checklist Gate 5:
-- [ ] Tests de la fase: todos pasan
-- [ ] Type check: sin errores
-- [ ] Lint: sin errores (después de --fix)
-- [ ] Sin desviaciones no reportadas del plan
-- [ ] Reporte post-fase generado
-```
+The hook `validate-implementation.sh` enforces:
 
-### 5. Protocolo STOP
+- [ ] Phase tests: all pass.
+- [ ] Type check: clean.
+- [ ] Lint: clean (post auto-fix).
+- [ ] No unreported deviations from the plan.
+- [ ] Post-phase report generated.
 
-Si el Implementer encuentra cualquiera de estas situaciones, debe PARAR:
+If the hook fails, the Implementer fixes the issue before continuing.
 
-- ⛔ El código existente contradice el plan
-- ⛔ Necesita una dependencia no prevista
-- ⛔ Un test existente se rompe por los cambios
-- ⛔ Más archivos afectados de los previstos
-- ⛔ Bug existente que afecta la implementación
-- ⛔ Ambigüedad en el plan interpretable de múltiples formas
+### 5. STOP protocol
 
-**Nunca improvises. Parar y preguntar > romper algo.**
+The Implementer **stops and reports** if any of these happen — these are the only blocking conditions. They represent genuine ambiguity that requires a human decision:
 
-### 6. Output al developer
+- ⛔ Existing code contradicts the plan.
+- ⛔ A required dependency is not in the plan.
+- ⛔ An existing test breaks because of the changes.
+- ⛔ More files are affected than listed.
+- ⛔ An existing bug interferes with the implementation.
+- ⛔ Plan ambiguity that allows multiple interpretations.
+
+**Never improvise. Stopping > breaking something silently.**
+
+### 6. Phase report
 
 ```markdown
-## Fase [N] — Completada ✅
+## Phase [N] — Complete ✅
 
-### Archivos creados
-- [ruta]: [descripción]
+### Files created
+- [path]: [description]
 
-### Archivos modificados
-- [ruta]: [qué cambió]
+### Files modified
+- [path]: [what changed]
 
 ### Tests
-- [X] nuevos, [Y] pasando, [Z] fallando
-- Verificaciones: tsc ✅ | eslint ✅ | prettier ✅
+- [X] new, [Y] passing, [Z] failing
+- Verifications: typecheck ✅ | lint ✅ | format ✅
 
-### Decisiones tomadas
-- [decisión]: [razón]
+### Decisions made
+- [decision]: [reason]
 
-### Desviaciones del plan
-- [ninguna / descripción]
+### Plan deviations
+- [none / description]
 ```
 
-Pregunta final:
-> "Fase [N] completada. ¿Revisas el código y me das luz verde para la Fase [N+1], o hay algo que ajustar?"
+### 7. Auto-proceed between phases
 
-**Espera revisión del developer antes de la siguiente fase.**
+```
+If AUTO_MODE=1:
+  Print the phase report.
+  Immediately invoke the Implementer for Phase N+1.
+  Continue until all phases are complete or a STOP-protocol trigger fires.
+
+If AUTO_MODE is unset or 0 (default):
+  Print the phase report.
+  Ask: "Phase [N] complete. Review and green-light Phase [N+1], or adjust?"
+  Wait for the developer's go-ahead.
+```
+
+The default behavior is interactive (one phase per turn) for first-time users. Set `AUTO_MODE=1` for fully autonomous multi-phase runs once you trust the workflow.

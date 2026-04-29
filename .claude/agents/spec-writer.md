@@ -83,6 +83,7 @@ Read `CLAUDE.md` at the start of every task to understand the stack, domain, use
 1. Read the developer's input.
 2. If there are related specs in `.claude/specs/`, read them for context.
 3. Read `CLAUDE.md` to understand the roadmap and priorities.
-4. Generate the full spec.
-5. List the open questions you detected.
-6. Wait for developer feedback before finalizing.
+4. Generate the full spec at `.claude/specs/<feature-name>.md`.
+5. List the open questions you detected — these are recorded inside the spec, not as a blocking gate.
+
+The structural hook (`validate-spec-structure.sh`) validates the spec automatically. The workflow then proceeds to `spec-audit`. The developer can interrupt at any point to answer the open questions inline; otherwise the Architect will surface them again during the audit.

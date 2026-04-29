@@ -1,78 +1,81 @@
 # Skill: Spec Audit
 
-Audita un spec contra el código real del proyecto, delegando la exploración al subagent Architect.
+Audits a spec against the real codebase, delegating exploration to the Architect subagent.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere auditar un spec, menciona "auditar spec", "audit", "revisar técnicamente", "analizar spec contra el código".
+When the user wants to audit a spec — e.g. "audit the spec for X", "review the spec technically", "check the spec against the code".
 
-## Instrucciones
+## Instructions
 
-### 1. Verificar que el spec existe
+### 1. Verify the spec exists
 
-Lee `.claude/specs/<feature-name>.md`. Si no existe, sugiere crear uno primero.
+Read `.claude/specs/<feature-name>.md`. If it doesn't exist, suggest running `spec-create` first.
 
-### 2. Delegar al Architect
+### 2. Delegate to the Architect
 
-Usa el subagent `.claude/agents/architect.md` para la auditoría técnica.
+Use the subagent at `.claude/agents/architect.md` for the technical audit.
 
-El Architect debe:
-- Leer el spec completo
-- Explorar el proyecto a fondo (sin escribir código)
-- Analizar: estructura, patrones, convenciones, tests, dependencias
-- Encontrar archivos similares a lo que se quiere construir
+The Architect must:
 
-### 3. El Architect enriquece el spec
+- Read the full spec.
+- Explore the project deeply (without writing any code).
+- Analyze: structure, patterns, conventions, tests, dependencies.
+- Find files similar to what we want to build.
 
-Agrega la sección `## Análisis Técnico (generado por Claude)` al spec:
+### 3. The Architect enriches the spec
+
+Append a `## Technical Analysis` section:
 
 ```markdown
 ---
 
-## Análisis Técnico (generado por Claude)
+## Technical Analysis
 
-### Archivos a modificar
-| Archivo | Razón |
-|---------|-------|
+### Files to modify
+| File | Reason |
+| ---- | ------ |
 
-### Archivos nuevos a crear
-| Archivo | Contenido |
-|---------|-----------|
+### New files to create
+| File | Content |
+| ---- | ------- |
 
-### Patrones del proyecto a respetar
+### Project patterns to respect
 -
 
-### Dependencias existentes relevantes
+### Existing dependencies to reuse
 -
 
-### Riesgos o conflictos detectados
+### Detected risks or conflicts
 -
 
-### Edge cases adicionales detectados en el código
+### Additional edge cases discovered in the code
 -
 
-### Preguntas que debes responder antes de implementar
+### Open questions before implementing
 -
 ```
 
-### 4. Quality Gate — Validar auditoría
+### 4. Quality Gate — automatic structural validation
 
-```
-✅ Checklist Gate 2:
-- [ ] Sección "Análisis Técnico" existe en el spec
-- [ ] Al menos 1 archivo a modificar listado con ruta exacta
-- [ ] Patrones del proyecto documentados (mínimo 2)
-- [ ] Riesgos evaluados (puede ser "ninguno detectado" si es simple)
-- [ ] Edge cases del código revisados
-```
+The hook `validate-audit.sh` validates that the analysis section exists and is populated:
 
-### 5. Output al developer
+- [ ] "Technical Analysis" section present.
+- [ ] At least 1 file to modify listed with exact path.
+- [ ] Project patterns documented (minimum 2).
+- [ ] Risks evaluated (may be "none detected" for simple features).
+- [ ] Edge cases reviewed.
 
-Muestra:
-1. Resumen de hallazgos del Architect
-2. ¿Hay gaps o ambigüedades importantes en el spec?
-3. ¿Hay algo en el código que complica la implementación?
-4. Preguntas que necesitan respuesta antes de continuar
-5. Instrucción: *"Resuelve las preguntas pendientes y luego ejecuta la revisión final del spec"*
+If the hook reports an issue, the Architect fixes it. **No human approval needed at this gate.**
 
-**No escribas código. Solo analiza y enriquece el spec.**
+### 5. Output
+
+Produce:
+1. Summary of findings.
+2. Any gaps or ambiguities still in the spec.
+3. Anything in the code that complicates the implementation.
+4. Open questions that should be answered before planning.
+
+The workflow proceeds automatically to `spec-review` next.
+
+**Do not write code. Only analyze and enrich the spec.**

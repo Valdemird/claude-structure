@@ -1,64 +1,52 @@
 # Skill: Spec Review
 
-Revisión final del spec con semáforo de readiness antes de pasar a planning.
+Final spec readiness check, producing a traffic-light report before moving to planning.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere revisar un spec antes de planificar, menciona "review spec", "revisar spec", "¿está listo el spec?", "semáforo", "readiness".
+When the user wants to review a spec before planning — "review spec", "is the spec ready?", "readiness check", "traffic light".
 
-## Instrucciones
+## Instructions
 
-### 1. Leer el spec completo
+### 1. Read the full spec
 
-Lee `.claude/specs/<feature-name>.md` incluyendo el Análisis Técnico si existe.
+Read `.claude/specs/<feature-name>.md` including the Technical Analysis section if present.
 
-### 2. Mostrar el spec
+### 2. Show the spec
 
-Presenta el contenido completo del spec al developer.
+Present the spec contents to the developer.
 
-### 3. Evaluar readiness — Semáforo
+### 3. Evaluate readiness — traffic light
 
-Evalúa cada dimensión:
+For each dimension:
 
-**🟢 Listo (Verde):**
-- Cosas bien definidas, sin ambigüedad, con criterios claros
+**🟢 Ready (green):** clearly defined, no ambiguity, with explicit criteria.
 
-**🟡 Puede continuar con supuestos (Amarillo):**
-- Cosas ambiguas pero que se pueden asumir razonablemente
-- Documenta el supuesto que harías: "Asumiría que X porque Y"
+**🟡 Proceed with documented assumption (yellow):** ambiguous but reasonable to assume. Document the assumption: "Will assume X because Y".
 
-**🔴 Bloqueante (Rojo):**
-- Decisiones críticas que faltan y NO se pueden asumir
-- Sin esto, el plan será incorrecto
+**🔴 Blocking (red):** critical missing decision that cannot be assumed. Without it, the plan will be wrong.
 
-### 4. Quality Gate — Validar readiness
-
-```
-✅ Checklist Gate 3:
-- [ ] Spec tiene Análisis Técnico (pasó por audit)
-- [ ] No hay items 🔴 sin resolver
-- [ ] Todos los 🟡 tienen supuestos documentados
-- [ ] Developer ha confirmado que quiere continuar
-```
-
-### 5. Output al developer
+### 4. Output
 
 ```markdown
-## Semáforo de Readiness: [feature-name]
+## Readiness Traffic Light: [feature-name]
 
-### 🟢 Listo
-- [lista de cosas bien definidas]
+### 🟢 Ready
+- [list of well-defined items]
 
-### 🟡 Puede continuar con supuestos
-- [cosa ambigua] → Supuesto: [lo que asumiría]
+### 🟡 Proceed with assumption
+- [ambiguous item] → Assumption: [what we'll assume]
 
-### 🔴 Bloqueante
-- [decisión que falta]
+### 🔴 Blocking
+- [missing decision]
 
-### Veredicto: [READY / READY CON SUPUESTOS / BLOQUEADO]
+### Verdict: [READY / READY-WITH-ASSUMPTIONS / BLOCKED]
 ```
 
-Pregunta final:
-> "¿Quieres ajustar algo del spec o procedemos a generar el plan de implementación?"
+### 5. Auto-proceed rules
 
-**Espera confirmación del developer antes de avanzar.**
+- **Verdict = READY** → automatically continue to `spec-plan`. No human approval required.
+- **Verdict = READY-WITH-ASSUMPTIONS** → in `AUTO_MODE=1`, automatically continue and document the assumptions in the plan. Otherwise show the assumptions and proceed unless the developer objects within the same turn.
+- **Verdict = BLOCKED** → STOP. Surface the 🔴 items and ask the developer to resolve them. This is the only blocking case.
+
+The 🔴 → STOP rule is the genuine contract: when the spec is missing a decision the agents cannot make, blocking is correct. Yellow assumptions are documented and proceed automatically.

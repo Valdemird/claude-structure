@@ -1,48 +1,50 @@
 # Skill: Spec Create
 
-Crea un spec inicial estructurado para una nueva feature, delegando al subagent Spec Writer.
+Creates an initial structured spec for a new feature, delegating to the Spec Writer subagent.
 
-## Cuándo se activa
+## When it activates
 
-Cuando el usuario quiere crear un spec nuevo, menciona "crear spec", "nuevo spec", "spec para", "specear", o describe una feature que quiere construir.
+When the user wants to create a new spec — e.g. "create a spec for X", "spec for Y", "I want to build Z".
 
-## Instrucciones
+## Instructions
 
-### 1. Preparar contexto
+### 1. Gather context
 
-Lee estos archivos para contexto:
-- `CLAUDE.md` — roadmap y prioridades actuales
-- `.claude/specs/` — specs existentes (para consistencia de formato y evitar duplicados)
+Read these files before drafting:
 
-### 2. Delegar al Spec Writer
+- `CLAUDE.md` — roadmap and current priorities.
+- `.claude/specs/` — existing specs (for format consistency and to avoid duplicates).
 
-Usa el subagent `.claude/agents/spec-writer.md` para generar el spec.
+### 2. Delegate to the Spec Writer
 
-Pásale:
-- **Feature name**: nombre kebab-case de la feature
-- **Descripción**: lo que el developer dijo que quiere
-- **Contexto adicional**: info relevante del roadmap o specs existentes
+Use the subagent at `.claude/agents/spec-writer.md` to generate the spec.
 
-### 3. Quality Gate — Validar spec creado
+Pass:
+- **Feature name**: kebab-case feature name.
+- **Description**: what the developer said they want.
+- **Additional context**: relevant info from the roadmap or existing specs.
 
-Antes de dar por terminado, verifica:
+### 3. Quality Gate — automatic structural validation
 
-```
-✅ Checklist Gate 1:
-- [ ] Archivo creado en .claude/specs/<feature-name>.md
-- [ ] Sección "Contexto" presente y no vacía
-- [ ] Sección "Qué quiero" presente y clara
-- [ ] Sección "Comportamiento esperado" con caso normal + edge cases
-- [ ] Sección "Lo que NO debe hacer" presente
-- [ ] Sección "Criterios de aceptación" con al menos 3 checkboxes
-- [ ] Sección "Preguntas abiertas" documentada (puede estar vacía si no hay dudas)
-```
+The PostToolUse hook (`validate-spec-structure.sh`) runs automatically when the spec file is written. The structural checklist:
 
-### 4. Output al developer
+- [ ] File created at `.claude/specs/<feature-name>.md`.
+- [ ] "Context" section present and non-empty.
+- [ ] "What I want" section present and clear.
+- [ ] "Expected behavior" section with happy path + edge cases.
+- [ ] "Anti-behaviors" section present.
+- [ ] "Acceptance criteria" with at least 3 checkboxes.
+- [ ] "Open questions" section documented (may be empty).
 
-Muestra:
-1. El spec generado completo
-2. Preguntas abiertas que necesitan respuesta
-3. Instrucción: *"Responde las preguntas abiertas y luego ejecuta la auditoría técnica del spec"*
+If the hook reports a structural issue, the Spec Writer fixes it before moving on. **No human approval is required at this gate** — the structure is enforced deterministically.
 
-**No explores el código todavía. Solo crea el spec con lo que tienes.**
+### 4. Output
+
+Produce:
+1. The full generated spec.
+2. The list of open questions detected.
+3. A short next-step note: "Run `spec-audit` next, or answer open questions inline first."
+
+**Do not explore the code yet. Just produce the spec from what you have.**
+
+The workflow then proceeds automatically to `spec-audit` unless the developer interrupts.
