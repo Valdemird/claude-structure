@@ -34,30 +34,48 @@ jobs:
       - name: Shellcheck hooks (errors only)
         run: shellcheck -S error hooks/*.sh
 
-      - name: Verify skills have SKILL.md
+      - name: Verify skills have SKILL.md with YAML frontmatter
         run: |
           set -e
           missing=0
           for d in skills/*/; do
-            if [ ! -f "$d/SKILL.md" ]; then
+            f="$d/SKILL.md"
+            if [ ! -f "$f" ]; then
               echo "missing SKILL.md in $d"
               missing=$((missing+1))
+              continue
             fi
+            if [ "$(head -1 "$f")" != "---" ]; then
+              echo "missing YAML frontmatter: $f"
+              missing=$((missing+1))
+              continue
+            fi
+            grep -q '^name:' "$f" || { echo "missing 'name:' in frontmatter: $f"; missing=$((missing+1)); }
+            grep -q '^description:' "$f" || { echo "missing 'description:' in frontmatter: $f"; missing=$((missing+1)); }
+            echo "ok: $f"
           done
           if [ $missing -gt 0 ]; then exit 1; fi
-          echo "all skills have SKILL.md"
 
-      - name: Verify agents are non-empty markdown
+      - name: Verify agents have YAML frontmatter
         run: |
           set -e
+          missing=0
           for f in agents/*.md; do
             if [ ! -s "$f" ]; then
               echo "empty agent: $f"
-              exit 1
+              missing=$((missing+1))
+              continue
             fi
-            head -1 "$f" | grep -q '^# ' || { echo "agent missing h1: $f"; exit 1; }
+            if [ "$(head -1 "$f")" != "---" ]; then
+              echo "missing YAML frontmatter: $f"
+              missing=$((missing+1))
+              continue
+            fi
+            grep -q '^name:' "$f" || { echo "missing 'name:' in frontmatter: $f"; missing=$((missing+1)); }
+            grep -q '^description:' "$f" || { echo "missing 'description:' in frontmatter: $f"; missing=$((missing+1)); }
             echo "ok: $f"
           done
+          if [ $missing -gt 0 ]; then exit 1; fi
 
       - name: Verify plugin manifest fields
         run: |

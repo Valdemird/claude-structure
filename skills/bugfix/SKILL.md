@@ -1,3 +1,8 @@
+---
+name: bugfix
+description: Disciplined bug-fix workflow with TDD (diagnose → failing test → minimal fix → full verification). Forces root-cause analysis before writing code, eliminating "fix → fail → re-fix" cycles. Triggers on "fix the bug", "X is broken", "not working", "regression".
+---
+
 # Skill: Bugfix
 
 Disciplined workflow for diagnosing and fixing bugs with TDD. Eliminates the "fix → fail → re-fix" cycle by forcing deep analysis before writing code.

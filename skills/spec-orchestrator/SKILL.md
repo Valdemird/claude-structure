@@ -1,3 +1,8 @@
+---
+name: spec-orchestrator
+description: Orchestrates the full spec-driven workflow end-to-end (create → audit → review → plan → implement) by delegating to specialized subagents. Triggers on "build the X feature end-to-end", "run the full spec workflow", "I want to develop a new feature".
+---
+
 # Skill: Spec Orchestrator
 
 Orchestrates the full spec-driven development workflow by delegating to specialized subagents.

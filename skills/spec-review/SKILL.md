@@ -1,3 +1,8 @@
+---
+name: spec-review
+description: Produces a traffic-light readiness report (🟢 ready, 🟡 proceed-with-assumption, 🔴 blocking) before moving to planning. Auto-proceeds on green/yellow; only red blocks. Triggers on "review spec", "is the spec ready?", "readiness check".
+---
+
 # Skill: Spec Review
 
 Final spec readiness check, producing a traffic-light report before moving to planning.

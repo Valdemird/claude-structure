@@ -1,3 +1,8 @@
+---
+name: spec-plan
+description: Generates a phased TDD implementation plan with deep thinking (trade-offs, devil's advocate, blast radius, tech debt), delegating to the Architect subagent. The plan is the single human-approval contract gate (skipped under AUTO_MODE=1). Triggers on "generate the plan for X", "plan the implementation".
+---
+
 # Skill: Spec Plan (with Ultrathink)
 
 Generates a phased implementation plan with TDD, delegating to the Architect subagent with extended thinking enabled.

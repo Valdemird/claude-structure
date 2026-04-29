@@ -1,3 +1,8 @@
+---
+name: spec-create
+description: Creates an initial structured spec for a new feature, delegating to the Spec Writer subagent. Triggers on "create a spec for X", "spec for Y", "I want to build Z", or when the user describes a feature they want to design.
+---
+
 # Skill: Spec Create
 
 Creates an initial structured spec for a new feature, delegating to the Spec Writer subagent.

@@ -1,3 +1,8 @@
+---
+name: spec-implement
+description: Implements a phase of the plan via the Implementer subagent with strict TDD (Red/Green/Refactor). Auto-proceeds across phases when AUTO_MODE=1; stops only on STOP-protocol triggers. Triggers on "implement phase N", "run phase".
+---
+
 # Skill: Spec Implement
 
 Implements a specific phase of the plan, delegating to the Implementer subagent with strict TDD.

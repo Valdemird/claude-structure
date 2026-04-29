@@ -1,3 +1,8 @@
+---
+name: spec-audit
+description: Audits a spec against the real codebase, delegating exploration to the Architect subagent. Triggers on "audit the spec for X", "review spec technically", "check spec against the code".
+---
+
 # Skill: Spec Audit
 
 Audits a spec against the real codebase, delegating exploration to the Architect subagent.
