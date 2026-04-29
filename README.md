@@ -1,86 +1,97 @@
 # claude-structure
 
-A stack-agnostic [Claude Code](https://docs.claude.com/en/docs/claude-code) template that turns the chat into a disciplined, spec-driven development pipeline: **Spec Writer → Architect → Implementer**, plus auto-invoked skills for bug fixing, frontend design, security/architecture/performance audits, and a meta skill to create new skills.
+A stack-agnostic [Claude Code](https://docs.claude.com/en/docs/claude-code) plugin/template that turns the chat into a disciplined, spec-driven development pipeline: **Spec Writer → Architect → Implementer**, plus auto-invoked skills for bug fixing, frontend design, security/architecture/performance audits, and a meta skill to create new skills.
 
-Drop the `.claude/` folder into any project and you get:
+What you get:
 
 - **3 specialized subagents** (`spec-writer`, `architect`, `implementer`) with clear roles and STOP protocols.
-- **13 skills** that auto-invoke when their context fits, instead of you remembering slash commands.
-- **4 deterministic quality-gate hooks** that enforce structure on specs, audits, plans, and implementations.
-- **One real human-approval gate** (plan approval) — and `AUTO_MODE=1` skips even that for fully autonomous runs.
+- **13 skills** that auto-invoke when their context fits.
+- **4 deterministic quality-gate hooks** (bash) that enforce structure on specs, audits, plans, and implementations.
+- **One real human-approval gate** (plan approval). `AUTO_MODE=1` skips even that.
 - **A workflow document** describing the end-to-end pipeline (`WORKFLOW.md`).
 
-This repo is the result of running 80+ real sessions and keeping only what proved essential. Skill selection is backed by hard usage data — `bugfix`, `frontend-design`, and `skill-creator` are in there because they got used week after week, not because they sound nice.
+The skill set is curated based on hard usage data — `bugfix`, `frontend-design`, and `skill-creator` made it in because they got used week after week, not because they sound nice.
 
 ---
 
-## Quick start
+## Install
 
-### Option A — install as a Claude Code plugin (recommended)
+### Option A — as a Claude Code plugin (recommended)
 
-```bash
-# In Claude Code:
+Inside Claude Code:
+
+```
 /plugin marketplace add Valdemird/claude-structure
 /plugin install claude-structure@claude-structure
 ```
 
-### Option B — copy the folder
+The plugin auto-discovers `agents/`, `skills/`, and `hooks/` (via `hooks/hooks.json`). Nothing else to wire up.
+
+### Option B — copy-paste into your project
 
 ```bash
 git clone https://github.com/Valdemird/claude-structure.git
-cp -r claude-structure/.claude /path/to/your/project/
+cd claude-structure
 
-cd /path/to/your/project
-mv .claude/CLAUDE.md.template CLAUDE.md
-$EDITOR CLAUDE.md   # describe your stack, conventions, commands
+# Copy plugin components into your project's .claude/
+mkdir -p /path/to/your/project/.claude
+cp -r agents skills hooks /path/to/your/project/.claude/
 
-# Optional: export toolchain commands so the hooks & implementer use the right tools
+# Copy the project-level templates
+cp templates/settings.json /path/to/your/project/.claude/settings.json
+cp templates/CLAUDE.md.template /path/to/your/project/CLAUDE.md
+$EDITOR /path/to/your/project/CLAUDE.md   # describe your stack & commands
+```
+
+### Configure the toolchain (any stack)
+
+```bash
 export TEST_CMD="pytest"          # or "npx vitest run", "go test", etc.
+export TEST_ALL_CMD="pytest"
 export TYPECHECK_CMD="mypy"
 export LINT_CMD="ruff check"
 export FORMAT_CMD="black"
-
-# Optional: turn on autonomous multi-phase implementation
-export AUTO_MODE=1
+export AUTO_MODE=1                # optional: autonomous multi-phase runs
 ```
 
 Open Claude Code in your project and the skills activate automatically based on the conversation.
 
 ---
 
-## What's inside
+## Repository layout
 
 ```
-claude-structure/
+claude-structure/                ← this is the plugin root
 ├── .claude-plugin/
-│   ├── plugin.json          ← Plugin manifest (auto-discovered)
-│   └── marketplace.json     ← Marketplace entry for /plugin marketplace add
-├── .claude/
-│   ├── CLAUDE.md.template   ← Project memory, with placeholders
-│   ├── settings.json        ← Permissions + hook wiring
-│   ├── agents/              ← Specialized subagents
-│   │   ├── architect.md
-│   │   ├── implementer.md
-│   │   └── spec-writer.md
-│   ├── hooks/               ← Quality-gate bash scripts (deterministic)
-│   │   ├── validate-spec-structure.sh
-│   │   ├── validate-audit.sh
-│   │   ├── validate-plan.sh
-│   │   └── validate-implementation.sh
-│   └── skills/              ← Auto-invoked workflows
-│       ├── spec-create/
-│       ├── spec-audit/
-│       ├── spec-review/
-│       ├── spec-plan/
-│       ├── spec-implement/
-│       ├── spec-orchestrator/
-│       ├── architecture/
-│       ├── security-audit/
-│       ├── performance/
-│       ├── mobile-audit/
-│       ├── bugfix/
-│       ├── frontend-design/
-│       └── skill-creator/
+│   ├── plugin.json              ← plugin manifest
+│   └── marketplace.json         ← marketplace entry for /plugin marketplace add
+├── agents/                      ← plugin auto-discovers these
+│   ├── architect.md
+│   ├── implementer.md
+│   └── spec-writer.md
+├── skills/                      ← plugin auto-discovers these
+│   ├── spec-create/
+│   ├── spec-audit/
+│   ├── spec-review/
+│   ├── spec-plan/
+│   ├── spec-implement/
+│   ├── spec-orchestrator/
+│   ├── architecture/
+│   ├── security-audit/
+│   ├── performance/
+│   ├── mobile-audit/
+│   ├── bugfix/
+│   ├── frontend-design/
+│   └── skill-creator/
+├── hooks/                       ← plugin reads hooks.json + scripts
+│   ├── hooks.json               ← plugin hook config (uses ${CLAUDE_PLUGIN_ROOT})
+│   ├── validate-spec-structure.sh
+│   ├── validate-audit.sh
+│   ├── validate-plan.sh
+│   └── validate-implementation.sh
+├── templates/                   ← for copy-paste users only
+│   ├── CLAUDE.md.template
+│   └── settings.json
 ├── .github/workflows/validate.yml  ← CI: shell, JSON, manifest, frontmatter
 ├── README.md
 ├── WORKFLOW.md
@@ -107,16 +118,14 @@ claude-structure/
 | `frontend-design`    | "build me a landing page", "design this component"                   |
 | `skill-creator`      | "create a new skill for…", "improve the X skill"                     |
 
-You don't need to memorize triggers — Claude Code picks them up from context. Skills auto-invoke; subagents run isolated; hooks enforce structure deterministically. That layering is the whole point.
+You don't need to memorize triggers — Claude Code picks them up from context. Skills auto-invoke; subagents run isolated; hooks enforce structure deterministically.
 
 ---
 
 ## AUTO_MODE: autonomous multi-phase runs
 
-Set `AUTO_MODE=1` in your shell to make the workflow run end-to-end without stopping between phases:
-
-| `AUTO_MODE` unset (default)                           | `AUTO_MODE=1`                                              |
-| ----------------------------------------------------- | ---------------------------------------------------------- |
+| `AUTO_MODE` unset (default)                            | `AUTO_MODE=1`                                              |
+| ------------------------------------------------------ | ---------------------------------------------------------- |
 | Plan approval pauses for explicit go-ahead.            | Plan approval is informational; implementation auto-starts. |
 | Implementer pauses between phases for green-light.     | Implementer runs every phase back-to-back.                  |
 | Bugfix pauses after diagnosis.                         | Bugfix proceeds straight to test + fix.                     |
@@ -133,8 +142,6 @@ Everything else is structural (bash hooks, deterministic) or informational. Ther
 ---
 
 ## Toolchain (override per-project)
-
-The Implementer agent and the Gate 5 hook run commands via env vars so this template works for any stack.
 
 | Variable          | Default (Node.js)        | Python example     | Go example            |
 | ----------------- | ------------------------ | ------------------ | --------------------- |
@@ -195,9 +202,7 @@ Claude Code's built-in `/plan` is great, but it is a single-step manual trigger.
 2. **Deterministic quality gates** — bash hooks that fail fast when a spec / plan / implementation doesn't meet structural rules. The model can't "forget" them.
 3. **Subagents with isolated context** — the Architect doesn't pollute the Implementer's context, and vice versa.
 4. **Autonomous mode** — `AUTO_MODE=1` runs the whole pipeline end-to-end with one approval gate (the plan), or zero.
-5. **Curated, data-driven skill set** — 13 skills selected after analyzing 81 real sessions. The ones that didn't earn their place are not here.
-
-Together, those five solve the "the model went off the rails on a long task" problem better than any single feature.
+5. **Curated, data-driven skill set** — 13 skills selected after analyzing 81 real sessions.
 
 ---
 

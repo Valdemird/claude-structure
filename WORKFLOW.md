@@ -301,38 +301,50 @@ The Implementer will automatically STOP if it finds:
 
 ## File Structure
 
+This is the layout in the **plugin source repository** (which is also what you copy when not using the plugin install path):
+
 ```
-.claude/
-├── agents/                          # Specialized subagents
+claude-structure/                    # plugin root
+├── .claude-plugin/
+│   ├── plugin.json                  # plugin manifest
+│   └── marketplace.json             # marketplace entry
+├── agents/                          # auto-discovered subagents
 │   ├── spec-writer.md               # Technical PM → creates specs
 │   ├── architect.md                 # Staff Engineer → audits + plans
 │   └── implementer.md               # Senior Dev → implements with TDD
 │
-├── skills/                          # Skills (auto-invoked workflows)
+├── skills/                          # auto-discovered skills
 │   ├── spec-orchestrator/SKILL.md   # End-to-end spec workflow
 │   ├── spec-create/SKILL.md         # Create spec → Gate 1
 │   ├── spec-audit/SKILL.md          # Audit spec → Gate 2
 │   ├── spec-review/SKILL.md         # Review + traffic light → Gate 3
 │   ├── spec-plan/SKILL.md           # Plan + Ultrathink → Gate 4
 │   ├── spec-implement/SKILL.md      # Implement phase → Gate 5
-│   ├── architecture/SKILL.md        # Architecture review (any module)
-│   ├── security-audit/SKILL.md      # OWASP-aligned security review
-│   ├── performance/SKILL.md         # Performance hot-paths review
-│   ├── mobile-audit/SKILL.md        # Mobile UX audit (web apps)
-│   ├── bugfix/SKILL.md              # Disciplined bug fixing with TDD
-│   ├── frontend-design/SKILL.md     # Distinctive UI / production-grade frontend
-│   └── skill-creator/SKILL.md       # Meta: create / improve skills
+│   ├── architecture/SKILL.md
+│   ├── security-audit/SKILL.md
+│   ├── performance/SKILL.md
+│   ├── mobile-audit/SKILL.md
+│   ├── bugfix/SKILL.md
+│   ├── frontend-design/SKILL.md
+│   └── skill-creator/SKILL.md
 │
-├── hooks/                           # Quality gate scripts
-│   ├── validate-spec-structure.sh   # Gate 1: spec structure
-│   ├── validate-audit.sh            # Gate 2: technical analysis
-│   ├── validate-plan.sh             # Gate 4: plan completeness
-│   └── validate-implementation.sh   # Gate 5: tests + typecheck + lint
+├── hooks/                           # plugin hook config + scripts
+│   ├── hooks.json                   # plugin wiring (uses ${CLAUDE_PLUGIN_ROOT})
+│   ├── validate-spec-structure.sh   # Gate 1
+│   ├── validate-audit.sh            # Gate 2
+│   ├── validate-plan.sh             # Gate 4
+│   └── validate-implementation.sh   # Gate 5
 │
-├── specs/                           # Generated specs (one per feature)
-├── settings.json                    # Permissions + hooks config
-└── CLAUDE.md                        # Project memory (you create this from CLAUDE.md.template)
+└── templates/                       # for copy-paste users only
+    ├── CLAUDE.md.template           # rename to CLAUDE.md in your project root
+    └── settings.json                # copy to <your-project>/.claude/settings.json
 ```
+
+When you **install this as a plugin**, Claude Code auto-discovers everything from the plugin root — you don't need to do anything beyond `/plugin install claude-structure@claude-structure`.
+
+When you **copy-paste**, you bring `agents/`, `skills/`, `hooks/` into your project's `.claude/`, and `templates/` provides starter `CLAUDE.md` and `settings.json` files for you to fill in.
+
+In both cases the spec output lives in your project at `.claude/specs/<feature>.md`.
 
 ---
 
