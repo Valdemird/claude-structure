@@ -8,7 +8,7 @@ When the user reports a bug, says "fix", "broken", "not working", "regression", 
 
 ## Instructions
 
-Toolchain commands are parameterized via environment variables. Defaults assume a Node.js + TypeScript project but you should override them for your stack (override defaults in `CLAUDE.md` or your shell):
+Toolchain commands are parameterized via environment variables. Defaults assume a Node.js + TypeScript project; override them in `CLAUDE.md` or your shell:
 
 | Variable          | Default                  |
 | ----------------- | ------------------------ |
@@ -22,7 +22,7 @@ Toolchain commands are parameterized via environment variables. Defaults assume 
 
 **Do NOT write any code yet.**
 
-1. **Understand the bug**: Read the user's report. If ambiguous, ask before continuing.
+1. **Understand the bug**: Read the user's report. If genuinely ambiguous (the symptom could mean two unrelated things), ask for one clarifying question. If the report is workable, proceed.
 
 2. **Locate the relevant code**: Use Grep / Glob / Read to find the files involved. Do not assume — read the real code.
 
@@ -31,7 +31,7 @@ Toolchain commands are parameterized via environment variables. Defaults assume 
    - **Logic bugs**: Trace the data flow step by step. Read the actual functions, do not assume they do what their name suggests.
    - **Data bugs**: Check the schema, the queries, and the real data in the database.
 
-4. **Present the diagnosis**:
+4. **Present the diagnosis inline and continue**:
 
 ```markdown
 ## Diagnosis
@@ -45,7 +45,7 @@ Toolchain commands are parameterized via environment variables. Defaults assume 
 - [line X of file Y does Z, but should do W]
 ```
 
-**Wait for developer confirmation before moving to Phase 2.**
+The diagnosis is for the developer's awareness — Phase 2 starts immediately. The only thing that pauses the workflow is genuine ambiguity surfaced in step 1, or the bug turning out to require an architectural change (in which case escalate to `spec-create`).
 
 ### Phase 2: Write a failing test (RED)
 
@@ -74,16 +74,9 @@ ${TEST_CMD} [test-file]
 Run in order:
 
 ```bash
-# Full test suite
 ${TEST_ALL_CMD}
-
-# Type check
 ${TYPECHECK_CMD}
-
-# Lint
 ${LINT_CMD} [modified files]
-
-# Format
 ${FORMAT_CMD} [modified files]
 ```
 
@@ -115,4 +108,4 @@ If anything fails, fix it before reporting.
 - **Fix root cause, not symptom**: Avoid bandaids. Remove dead code instead of guarding around it. If a feature flag is making the bug appear, evaluate whether the flag should be removed.
 - **CSS / layout bugs**: Trace the full constraint chain (see Phase 1). Do not add `overflow-hidden` or `max-height` to mask a missing height constraint on an ancestor.
 - **Never change a test so it passes** — change the code.
-- **Commits**: use Conventional Commits format (`fix(scope): description`).
+- **Commits**: use Conventional Commits (`fix(scope): description`).

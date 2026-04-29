@@ -1,0 +1,95 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        run: |
+          set -e
+          for f in $(find . -name '*.json' -not -path './node_modules/*' -not -path './.git/*'); do
+            python3 -m json.tool "$f" > /dev/null
+            echo "ok: $f"
+          done
+
+      - name: Bash syntax check on hooks
+        run: |
+          set -e
+          for f in hooks/*.sh; do
+            bash -n "$f"
+            echo "ok: $f"
+          done
+
+      - name: Install shellcheck
+        run: sudo apt-get update -y && sudo apt-get install -y shellcheck
+
+      - name: Shellcheck hooks (errors only)
+        run: shellcheck -S error hooks/*.sh
+
+      - name: Verify skills have SKILL.md
+        run: |
+          set -e
+          missing=0
+          for d in skills/*/; do
+            if [ ! -f "$d/SKILL.md" ]; then
+              echo "missing SKILL.md in $d"
+              missing=$((missing+1))
+            fi
+          done
+          if [ $missing -gt 0 ]; then exit 1; fi
+          echo "all skills have SKILL.md"
+
+      - name: Verify agents are non-empty markdown
+        run: |
+          set -e
+          for f in agents/*.md; do
+            if [ ! -s "$f" ]; then
+              echo "empty agent: $f"
+              exit 1
+            fi
+            head -1 "$f" | grep -q '^# ' || { echo "agent missing h1: $f"; exit 1; }
+            echo "ok: $f"
+          done
+
+      - name: Verify plugin manifest fields
+        run: |
+          python3 - <<'PY'
+          import json
+          required_plugin = {"name", "version", "description"}
+          required_marketplace_top = {"name", "description", "owner", "plugins"}
+          required_marketplace_entry = {"name", "description", "category", "source", "homepage"}
+
+          plugin = json.load(open(".claude-plugin/plugin.json"))
+          missing = required_plugin - plugin.keys()
+          assert not missing, f"plugin.json missing {missing}"
+          print("ok: .claude-plugin/plugin.json")
+
+          marketplace = json.load(open(".claude-plugin/marketplace.json"))
+          missing = required_marketplace_top - marketplace.keys()
+          assert not missing, f"marketplace.json missing {missing}"
+          assert isinstance(marketplace["plugins"], list)
+          for entry in marketplace["plugins"]:
+              missing = required_marketplace_entry - entry.keys()
+              assert not missing, f"marketplace plugin entry missing {missing}"
+          print("ok: .claude-plugin/marketplace.json")
+
+          hooks_cfg = json.load(open("hooks/hooks.json"))
+          assert "hooks" in hooks_cfg, "hooks/hooks.json missing 'hooks'"
+          print("ok: hooks/hooks.json")
+          PY
+
+      - name: Verify templates exist
+        run: |
+          set -e
+          test -f templates/CLAUDE.md.template
+          test -f templates/settings.json
+          python3 -m json.tool templates/settings.json > /dev/null
+          echo "ok: templates/"
