@@ -1,0 +1,23 @@
+{
+  "skill_name": "security-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Hazme una auditoría de seguridad completa de la aplicación. Quiero saber si hay vulnerabilidades en los API routes, server actions, autenticación, y headers de seguridad.",
+      "expected_output": "A structured markdown security report covering OWASP Top 10 categories with specific file:line references, severity ratings, and actionable recommendations. Should identify missing security headers, verify auth on all endpoints, and check for injection flaws.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Review the auth and access control in the shared lists feature. I'm worried about IDOR vulnerabilities — can a user access or modify lists they shouldn't have access to?",
+      "expected_output": "A focused report on broken access control (OWASP A01) in the shared lists feature. Should trace the authorization flow for list CRUD, member management, and task operations within shared lists. Should check for IDOR in API routes that take list IDs.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Check if the app is vulnerable to XSS or injection attacks. We accept user input in task titles, descriptions, and the AI chat. Make sure everything is properly sanitized.",
+      "expected_output": "A focused report on injection vulnerabilities (OWASP A03). Should check dangerouslySetInnerHTML usage, HTML sanitization functions, Prisma raw queries, and prompt injection in AI chat. Should verify Zod validation on all input endpoints.",
+      "files": []
+    }
+  ]
+}

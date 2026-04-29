@@ -1,0 +1,83 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code when working in this repository. Rename this file from `CLAUDE.md.template` to `CLAUDE.md` and fill in your project's details.
+
+## Project Overview
+
+[1–2 sentences describing what this app does and who it's for.]
+
+## Stack
+
+- **Language**: [e.g., TypeScript, Python, Go, Rust]
+- **Framework**: [e.g., Next.js 15, Django 5, Rails 7, Gin]
+- **Database**: [e.g., PostgreSQL via Prisma, SQLite via SQLAlchemy]
+- **Auth**: [e.g., NextAuth, Devise, custom JWT]
+- **UI**: [e.g., shadcn/ui + Tailwind, plain CSS, native templates]
+- **Testing**: [e.g., Vitest + Playwright, pytest, go test]
+- **Linting / formatting**: [e.g., ESLint + Prettier, ruff + black, golangci-lint + gofmt]
+- **Package manager**: [e.g., npm, pnpm, pip, cargo, go]
+
+## Toolchain commands (used by hooks and the Implementer agent)
+
+These are the commands the Quality Gate hook (`validate-implementation.sh`) and the Implementer subagent will run. Override the defaults below by exporting these env vars in your shell, in `direnv`, or in CI.
+
+| Variable          | Purpose                  | Example for this project           |
+| ----------------- | ------------------------ | ---------------------------------- |
+| `TEST_CMD`        | Run a specific test file | `npx vitest run`                   |
+| `TEST_ALL_CMD`    | Run the full test suite  | `npm test`                         |
+| `TYPECHECK_CMD`   | Static type checking     | `npx tsc --noEmit`                 |
+| `LINT_CMD`        | Linter                   | `npx eslint`                       |
+| `FORMAT_CMD`      | Formatter                | `npx prettier --write`             |
+| `BUILD_CMD`       | Production build         | `npm run build`                    |
+
+## Common Commands
+
+| Command                | Description                |
+| ---------------------- | -------------------------- |
+| `[your dev command]`   | Start dev server           |
+| `[your test command]`  | Run tests                  |
+| `[your build command]` | Production build           |
+| `[your lint command]`  | Lint                       |
+
+## Architecture
+
+[Brief description of folder layout, layering rules, and naming conventions. Example:
+
+- `src/app/` — routes / pages
+- `src/lib/` — shared utilities
+- `src/services/` — business logic
+- `src/db/` — data access layer
+]
+
+## Code Conventions
+
+- [Convention 1: e.g., Path aliases, no relative `../../` imports.]
+- [Convention 2: e.g., No `any`, prefer typed unknowns.]
+- [Convention 3: e.g., Logging: use the project logger, never `console.log`.]
+- [Convention 4: e.g., Styling: Tailwind only, no inline styles.]
+
+## Internationalization (if applicable)
+
+[Describe i18n strategy. Otherwise delete this section.]
+
+## Observability
+
+[How logs / metrics / errors are reported. Otherwise delete this section.]
+
+## Testing
+
+- Unit: [path patterns and runner]
+- Integration: [if applicable]
+- E2E: [tool + config path]
+
+## Git Conventions
+
+- Branches: `feature/`, `fix/`, `chore/`, `docs/`.
+- Commits: Conventional Commits (`type(scope): description`).
+- PR checks: [list checks that must pass].
+
+---
+
+## Roadmap & Priorities
+
+[Optional: list current focus areas so the Spec Writer / Architect agents can align proposals with priorities.]

@@ -1,0 +1,23 @@
+{
+  "skill_name": "mobile-audit",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Audit the QuickAddInput component for mobile interaction issues. Check keyboard handling, touch targets, focus behavior, and any edge cases that could break on phones.",
+      "expected_output": "A structured mobile audit report covering virtual keyboard handling, touch target sizes, focus/scroll behavior, inputMode attributes, and iOS/Android specific issues for QuickAddInput.tsx",
+      "files": ["src/components/client/todo/QuickAddInput.tsx"]
+    },
+    {
+      "id": 1,
+      "prompt": "Review the BottomNav component and the overall mobile layout for safe area issues, touch target sizing, and responsive behavior. Include orientation change handling.",
+      "expected_output": "A structured mobile audit report covering safe area inset usage, viewport-fit=cover, touch target measurements, orientation handling, and bottom navigation UX on mobile devices.",
+      "files": ["src/components/client/BottomNav.tsx", "src/app/layout.tsx"]
+    },
+    {
+      "id": 2,
+      "prompt": "Do a mobile audit of the AiChatOverlay component. Focus on how it handles the virtual keyboard, scroll behavior in the chat messages area, the input area interaction, and safe area insets.",
+      "expected_output": "A structured mobile audit report covering keyboard interaction with the chat input, scroll container behavior, safe area handling, overlay positioning on mobile, and any iOS Safari specific issues.",
+      "files": ["src/components/client/chat/AiChatOverlay.tsx"]
+    }
+  ]
+}
