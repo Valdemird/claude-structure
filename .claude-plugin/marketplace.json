@@ -1,0 +1,30 @@
+{
+  "name": "claude-structure",
+  "owner": {
+    "name": "Sebastian Castaño",
+    "url": "https://github.com/Valdemird"
+  },
+  "plugins": [
+    {
+      "name": "claude-structure",
+      "description": "Stack-agnostic spec-driven workflow for Claude Code with 3 subagents, 13 curated skills, 4 deterministic quality-gate hooks, and an AUTO_MODE for autonomous multi-phase implementation. Skill selection is backed by 81-session usage analysis.",
+      "category": "development",
+      "author": {
+        "name": "Sebastian Castaño"
+      },
+      "source": {
+        "source": "github",
+        "repo": "Valdemird/claude-structure"
+      },
+      "homepage": "https://github.com/Valdemird/claude-structure",
+      "version": "0.2.0",
+      "tags": [
+        "spec-driven",
+        "subagents",
+        "tdd",
+        "autonomous",
+        "workflow"
+      ]
+    }
+  ]
+}
